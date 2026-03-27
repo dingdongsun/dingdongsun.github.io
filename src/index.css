@@ -396,3 +396,8 @@ p.desc {
         }
     }
 }
+
+.react-tooltip {
+    font-size: 12px!important;
+    font-weight: normal!important;
+}

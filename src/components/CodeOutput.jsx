@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useCssStore from '../store/useCssStore';
 import { generateCSS } from '../utils/generateCSS';
 import { toast } from 'sonner';
+import { Tooltip } from 'react-tooltip'
 
 function simpleCssMinify(css) {
     return css
@@ -32,11 +33,9 @@ function CodeOutput() {
 
     return (
         <div className='coffee-button'>
-            <button onClick={handleCopy}>
-                {copied ? '복사 완료' : 'CSS 코드 복사'}
-            </button>
 
             <button
+                data-tooltip-id="my-tooltip" data-tooltip-content="커피 한 잔의 응원이 큰 힘이 됩니다 ☕"
                 onClick={handleSupport}
                 style={{
                     backgroundColor: '#FEE500',
@@ -47,6 +46,12 @@ function CodeOutput() {
             >
                 개발자에게 커피 사주기
             </button>
+            
+            <button onClick={handleCopy}>
+                {copied ? '복사 완료' : 'CSS 코드 복사'}
+            </button>
+            
+            <Tooltip id="my-tooltip" />
         </div>
     );
 }
