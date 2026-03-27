@@ -167,11 +167,8 @@ table {
     position: relative;
 }
 
-.title button {
-    vertical-align: middle;
-    position: absolute;
-    right: 0;
-    top: -3px;
+.coffee-button {
+    display: inline-flex; gap: 8px; align-items: center; margin-left: 12px; vertical-align: middle; position: absolute; right: 0px; top: -3px;
 }
 
 .option-panel {
@@ -325,9 +322,11 @@ p.desc {
         padding-top: 2rem;
     }
 
-    .title button {
-        right: 0;
-        top: calc(2rem - 3px);
+    .title .coffee-button {
+        display: flex;
+        position: relative;
+        justify-content: flex-end;
+        margin-top: 12px;
     }
 
     .option-panel,
@@ -356,6 +355,10 @@ p.desc {
 
         .title img {
             height: 30px;
+        }
+
+        .coffee-button {
+            margin-left: 0;
         }
 
         .title button {
