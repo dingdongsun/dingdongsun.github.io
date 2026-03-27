@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 const COOLDOWN_MS = 2000;
 const MAX_RETRIES = 2;
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const isRateLimitError = (error) => {
     if (error?.status === 429) return true;
 
@@ -27,10 +29,16 @@ export default function AiPresetGenerator() {
             try {
                 return await generatePresetFromGemini(userPrompt, fontNames);
             } catch (error) {
-                console.error(error);
-                toast.error(
-                    error?.userMessage || '프리셋 생성에 실패했습니다. 잠시 후 다시 시도해주세요.'
-                );
+                const shouldRetry = isRateLimitError(error) && attempt < MAX_RETRIES;
+
+                if (!shouldRetry) {
+                    throw error;
+                }
+
+                const waitMs = 1500 * (2 ** attempt);
+                toast(`요청이 많아 잠시 후 다시 시도합니다.`);
+
+                await sleep(waitMs);
             }
         }
 
