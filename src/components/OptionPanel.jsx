@@ -2,9 +2,10 @@ import React, { useEffect } from 'react';
 import useCssStore from '../store/useCssStore';
 import ColorPickerField from './ColorPickerField';
 import PresetButton from './PresetButton';
+import AiPresetGenerator from './AiPresetGenerator';
 // import ExportPresetButton from './ExportPresetButton';
 
-const fontList = [
+export const fontList = [
     {
         name: `'CookieRun-Regular'`,
         label: 'CookieRun',
@@ -3072,6 +3073,7 @@ function OptionPanel() {
 
     return (
         <div className='option-wrapper'>
+            <AiPresetGenerator />
             {/* <ExportPresetButton /> */}
             <div className='chatting_row'>
                 <span className='label'>샘플 프리셋</span>

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@google/genai": "^1.46.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -12,6 +13,7 @@
     "react-colorful": "^5.6.1",
     "react-dom": "^19.1.0",
     "react-scripts": "5.0.1",
+    "sonner": "^2.0.7",
     "web-vitals": "^2.1.4",
     "zustand": "^5.0.6"
   },

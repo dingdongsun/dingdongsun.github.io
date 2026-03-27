@@ -15,7 +15,7 @@ function ExportPresetButton() {
 
     const json = JSON.stringify(pureState, null, 2);
     navigator.clipboard.writeText(json).then(() => {
-      alert('🎉 현재 설정값이 클립보드에 복사되었습니다!');
+      alert('현재 설정값이 클립보드에 복사되었습니다!');
     });
   };
 
