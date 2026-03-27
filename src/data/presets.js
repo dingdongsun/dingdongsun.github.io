@@ -605,7 +605,7 @@ export const chatStylePresets = {
     },
     cloud: {
         "label": "구름둥둥",
-        "fontFamily": "GowunDodum",
+        "fontFamily": "GowoonDodum",
         "fontWeight": 400,
         "fontUrl": "url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2108@1.1/GowunDodum-Regular.woff') format('woff')",
         "fontSize": 24,
