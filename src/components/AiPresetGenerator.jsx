@@ -1,25 +1,60 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import useCssStore from '../store/useCssStore';
 import { generatePresetFromGemini } from '../utils/geminiApi';
 import { fontList } from './OptionPanel';
 import { toast } from 'sonner';
 
+const COOLDOWN_MS = 2000;
+const MAX_RETRIES = 2;
+
+const isRateLimitError = (error) => {
+    if (error?.status === 429) return true;
+
+    const message = String(error?.message || '');
+    return /RESOURCE_EXHAUSTED|rate limit|too many requests|429/i.test(message);
+};
+
 export default function AiPresetGenerator() {
     const [prompt, setPrompt] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const lastRequestedAtRef = useRef(0);
 
     const applyPreset = useCssStore(state => state.applyPreset);
     const setFontFamily = useCssStore(state => state.setFontFamily);
 
+    const requestPresetWithRetry = async (userPrompt, fontNames) => {
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+            try {
+                return await generatePresetFromGemini(userPrompt, fontNames);
+            } catch (error) {
+                console.error(error);
+                toast.error(
+                    error?.userMessage || '프리셋 생성에 실패했습니다. 잠시 후 다시 시도해주세요.'
+                );
+            }
+        }
+
+        throw new Error('프리셋 생성 재시도에 실패했습니다.');
+    };
+
     const handleGenerate = async () => {
         if (!prompt.trim() || isLoading) return;
 
+        const now = Date.now();
+        const elapsed = now - lastRequestedAtRef.current;
+
+        if (elapsed < COOLDOWN_MS) {
+            const remainSeconds = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
+            toast(`요청이 너무 빨라요. ${remainSeconds}초 후 다시 시도해주세요.`);
+            return;
+        }
+
+        lastRequestedAtRef.current = now;
         setIsLoading(true);
 
         try {
             const fontNames = fontList.map(f => f.name.replace(/['"]/g, ''));
-
-            const aiData = await generatePresetFromGemini(prompt, fontNames);
+            const aiData = await requestPresetWithRetry(prompt, fontNames);
 
             applyPreset(aiData);
 
@@ -38,7 +73,12 @@ export default function AiPresetGenerator() {
             toast.success(`AI가 [${aiData.label}] 테마를 완성했습니다!`);
         } catch (error) {
             console.error(error);
-            toast.error('프리셋 생성에 실패했습니다. API 키와 네트워크를 확인해주세요.');
+
+            if (isRateLimitError(error)) {
+                toast.error('요청이 너무 많아요. 잠시 후 다시 시도해주세요.');
+            } else {
+                toast.error('프리셋 생성에 실패했습니다. API 키와 네트워크를 확인해주세요.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -123,12 +163,15 @@ export default function AiPresetGenerator() {
                     <p className="desc">원하는 분위기를 입력하면 AI가 채팅창 프리셋을 자동으로 만들어드려요.</p>
                     <p className="desc">예시: "빈티지한 느낌", "형광색 사이버펑크", "귀여운 다이어리"</p>
 
-                    <div className="effectOptions" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        flexDirection: 'row',
-                        gap: '10px'
-                    }}>
+                    <div
+                        className="effectOptions"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexDirection: 'row',
+                            gap: '10px'
+                        }}
+                    >
                         <input
                             type="text"
                             value={prompt}

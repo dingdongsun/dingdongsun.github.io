@@ -256,11 +256,110 @@ const safeParseJson = (text) => {
   }
 };
 
+const getRawErrorMessage = (error) => {
+  if (!error) return "";
+
+  if (typeof error?.message === "string") return error.message;
+
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+};
+
+const getParsedApiError = (error) => {
+  const rawMessage = getRawErrorMessage(error);
+
+  try {
+    const parsed = JSON.parse(rawMessage);
+    return parsed?.error || null;
+  } catch {
+    return null;
+  }
+};
+
+export const normalizeGeminiError = (error) => {
+  const rawMessage = getRawErrorMessage(error);
+  const apiError = getParsedApiError(error);
+
+  const status =
+    error?.status ||
+    apiError?.code ||
+    null;
+
+  const apiStatus =
+    apiError?.status ||
+    error?.name ||
+    "";
+
+  const apiMessage =
+    apiError?.message ||
+    rawMessage ||
+    "알 수 없는 오류가 발생했습니다.";
+
+  const mergedText = `${apiStatus} ${apiMessage} ${rawMessage}`.toLowerCase();
+
+  const isRateLimit =
+    status === 429 ||
+    mergedText.includes("resource_exhausted") ||
+    mergedText.includes("rate limit") ||
+    mergedText.includes("too many requests") ||
+    mergedText.includes("quota");
+
+  const isInvalidApiKey =
+    mergedText.includes("api_key_invalid") ||
+    mergedText.includes("api key not valid") ||
+    mergedText.includes("invalid api key");
+
+  const isBlocked =
+    mergedText.includes("blocked") ||
+    mergedText.includes("safety");
+
+  const isNetwork =
+    mergedText.includes("failed to fetch") ||
+    mergedText.includes("networkerror") ||
+    mergedText.includes("load failed") ||
+    mergedText.includes("network request failed");
+
+  let userMessage = "프리셋 생성에 실패했습니다. 잠시 후 다시 시도해주세요.";
+  let code = "UNKNOWN_ERROR";
+
+  if (isRateLimit) {
+    userMessage = "요청이 너무 많아요. 잠시 후 다시 시도해주세요.";
+    code = "RATE_LIMIT";
+  } else if (isInvalidApiKey) {
+    userMessage = "Gemini API 키가 올바르지 않습니다. API 키 설정을 확인해주세요.";
+    code = "INVALID_API_KEY";
+  } else if (isNetwork) {
+    userMessage = "네트워크 연결이 불안정합니다. 인터넷 연결 상태를 확인해주세요.";
+    code = "NETWORK_ERROR";
+  } else if (isBlocked) {
+    userMessage = "입력 내용이 정책상 제한되어 요청을 처리할 수 없습니다. 문구를 조금 바꿔서 다시 시도해주세요.";
+    code = "SAFETY_BLOCKED";
+  }
+
+  return {
+    name: "GeminiNormalizedError",
+    status,
+    code,
+    apiStatus,
+    apiMessage,
+    rawMessage,
+    isRateLimit,
+    isInvalidApiKey,
+    isNetwork,
+    isBlocked,
+    userMessage,
+    originalError: error,
+  };
+};
+
 export const generatePresetFromGemini = async (userPrompt, fontNames) => {
   const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
 
   if (!API_KEY) {
-    throw new Error("REACT_APP_GEMINI_API_KEY가 비어 있습니다.");
+    throw normalizeGeminiError(new Error("REACT_APP_GEMINI_API_KEY가 비어 있습니다."));
   }
 
   const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -321,8 +420,11 @@ ${userPrompt}
     };
   } catch (error) {
     console.error("Gemini API Error:", error);
-    console.error("status:", error?.status);
-    console.error("message:", error?.message);
-    throw error;
+
+    const normalizedError = normalizeGeminiError(error);
+
+    console.error("Normalized Gemini Error:", normalizedError);
+
+    throw normalizedError;
   }
 };
