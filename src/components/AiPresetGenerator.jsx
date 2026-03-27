@@ -121,8 +121,8 @@ export default function AiPresetGenerator() {
 
             setFontFamily(selectedFont.name, url, weights, weightVal);
 
-            setPrompt('');
-            toast.success(`AI가 [${aiData.label}] 테마를 완성했습니다!`);
+            // 알림 메시지에 사용자가 입력한 프롬프트 추가!
+            toast.success(`AI가 '${prompt}'에 맞는 [${aiData.label}] 테마를 완성했습니다!`);
         } catch (error) {
             console.error(error);
             toast.error(
@@ -172,8 +172,7 @@ export default function AiPresetGenerator() {
                     <span className="label">AI 매직 프리셋 생성</span>
                     <p className="desc">원하는 분위기를 입력하면 AI가 채팅창 프리셋을 자동으로 만들어드립니다.</p>
 
-                    {/* API 키 영역 */}
-                    <div style={{ marginBottom: '16px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef', marginTop: 12 }}>
+                    <div style={{ marginBottom: '16px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 700, color: '#343a40' }}>Gemini API Key</span>
                             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#339af0', textDecoration: 'none', fontWeight: 600 }}>
@@ -181,7 +180,6 @@ export default function AiPresetGenerator() {
                             </a>
                         </div>
                         
-                        {/* 발급 방법 상세 안내 (아코디언 형태) */}
                         <details style={{ marginBottom: '12px', fontSize: '13px', color: '#495057' }}>
                             <summary style={{ cursor: 'pointer', fontWeight: 600, color: '#495057', marginBottom: '8px', outline: 'none' }}>
                                 API 키 발급 방법이 궁금하신가요?
@@ -197,7 +195,6 @@ export default function AiPresetGenerator() {
                             </div>
                         </details>
 
-                        {/* 입력창과 토글 버튼 컨테이너 */}
                         <div style={{ position: 'relative' }}>
                             <input
                                 type={showApiKey ? "text" : "password"}
@@ -234,7 +231,6 @@ export default function AiPresetGenerator() {
                             </button>
                         </div>
                         
-                        {/* 안내 문구 강조 영역 */}
                         <div style={{ 
                             padding: '12px', 
                             background: '#fff3cd', 
