@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useCssStore from '../store/useCssStore';
 import { generatePresetFromGemini } from '../utils/geminiApi';
 import { fontList } from './OptionPanel';
+import { toast } from 'sonner';
 
 export default function AiPresetGenerator() {
     const [prompt, setPrompt] = useState('');
@@ -37,7 +38,7 @@ export default function AiPresetGenerator() {
             toast.success(`AI가 [${aiData.label}] 테마를 완성했습니다!`);
         } catch (error) {
             console.error(error);
-            alert('프리셋 생성에 실패했습니다. API 키와 네트워크를 확인해주세요.');
+            toast.error('프리셋 생성에 실패했습니다. API 키와 네트워크를 확인해주세요.');
         } finally {
             setIsLoading(false);
         }

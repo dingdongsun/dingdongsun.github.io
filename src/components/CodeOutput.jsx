@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useCssStore from '../store/useCssStore';
 import { generateCSS } from '../utils/generateCSS';
+import { toast } from 'sonner';
 function simpleCssMinify(css) {
     return css
         .replace(/\/\*[\s\S]*?\*\//g, '')      // 주석 제거
@@ -18,7 +19,7 @@ function CodeOutput() {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000); // 2초 후 복사됨 표시 제거
         } catch (err) {
-            alert('복사에 실패했어요 🥲');
+            toast.error('복사에 실패했어요.');
         }
     };
     return (

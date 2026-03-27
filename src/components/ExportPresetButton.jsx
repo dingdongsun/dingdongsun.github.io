@@ -1,4 +1,5 @@
 import useCssStore from '../store/useCssStore';
+import { toast } from 'sonner';
 
 function ExportPresetButton() {
   const cssState = useCssStore(); // 전체 store 상태
@@ -15,7 +16,7 @@ function ExportPresetButton() {
 
     const json = JSON.stringify(pureState, null, 2);
     navigator.clipboard.writeText(json).then(() => {
-      alert('현재 설정값이 클립보드에 복사되었습니다!');
+      toast.success('현재 설정값이 클립보드에 복사되었습니다!');
     });
   };
 
