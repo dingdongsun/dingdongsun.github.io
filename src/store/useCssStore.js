@@ -1,7 +1,13 @@
 import { create } from 'zustand';
+
 const useCssStore = create((set) => ({
     fontFamily: 'CookieRun-Regular',
     fontUrl: `url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff')`,
+    
+    // 💡 1. 굵기 상태 저장용 변수 추가
+    fontWeight: 400,
+    availableWeights: [], 
+
     fontSize: 28,
     fontBold: false,
     lineHeight: 36,
@@ -22,8 +28,11 @@ const useCssStore = create((set) => ({
     enableFadeOut: false,
     fadeDuration: 30,
     chatMarginBottom: 5,
+    showBadge: true,
     userIconSize: 32,
+    badgeTop: 0, // 💡 뱃지 상하 위치 추가
     stickerSize: 48,
+    stickerTop: 0, // 💡 이모티콘 상하 위치 추가
     showNotice: false,
     noticeText: '방송 공지가 들어갑니다.',
     noticeFontSize: 28,
@@ -33,6 +42,9 @@ const useCssStore = create((set) => ({
     noticeRadius: 12,
     showNickname: true,
     blockNickname: false,
+    nicknameSuffixType: '', 
+    nicknameSuffixCustom: '',
+    nicknameSuffixColor: { r: 255, g: 255, b: 255, a: 1 },
     viewerNickname: '시청자별명',
     letterSpacing: 0,
     noticeTextColor: { r: 255, g: 255, b: 255, a: 1 },
@@ -43,16 +55,25 @@ const useCssStore = create((set) => ({
     nameColor: { r: 255, g: 255, b: 255, a: 1 },
     nameColorCheck: false,
     align: 'left',
+
     applyPreset: (preset) => set(() => ({ ...preset })),
     setAlign: (v) => set({ align: v }),
     setNameBgColor: (v) => set({ nameBgColor: v }),
     setNameColor: (v) => set({ nameColor: v }),
     setNameColorCheck: (v) => set({ nameColorCheck: v }),
     setPreviewScale: (v) => set({ previewScale: v }),
-    setFontFamily: (name, url) => set({
+    
+    // 💡 2. 폰트를 바꿀 때 굵기 배열(weights)도 같이 넘겨받도록 수정
+    setFontFamily: (name, url, weights, defaultWeight) => set({
         fontFamily: name,
-        fontUrl: url
+        fontUrl: url,
+        availableWeights: weights || [],
+        fontWeight: defaultWeight || 400
     }),
+    
+    // 💡 3. 굵기 변경용 함수 추가
+    setFontWeight: (weight, url) => set({ fontWeight: weight, fontUrl: url }),
+
     setLetterSpacing: (v) => set({ letterSpacing: v }),
     setViewerNickname: (v) => set({ viewerNickname: v }),
     setFontSize: (v) => set({ fontSize: v }),
@@ -76,7 +97,10 @@ const useCssStore = create((set) => ({
     setFadeDuration: (v) => set({ fadeDuration: v }),
     setChatMarginBottom: (v) => set({ chatMarginBottom: v }),
     setUserIconSize: (v) => set({ userIconSize: v }),
+    setShowBadge: (v) => set({ showBadge: v }),
+    setBadgeTop: (v) => set({ badgeTop: v }), // 💡 뱃지 위치 변경 함수
     setStickerSize: (v) => set({ stickerSize: v }),
+    setStickerTop: (v) => set({ stickerTop: v }), // 💡 이모티콘 위치 변경 함수
     setShowNotice: (v) => set({ showNotice: v }),
     setNoticeText: (v) => set({ noticeText: v }),
     setNoticeFontSize: (v) => set({ noticeFontSize: v }),
@@ -86,8 +110,12 @@ const useCssStore = create((set) => ({
     setNoticeRadius: (v) => set({ noticeRadius: v }),
     setShowNickname: (v) => set({ showNickname: v }),
     setBlockNickname: (v) => set({ blockNickname: v }),
+    setNicknameSuffixType: (v) => set({ nicknameSuffixType: v }),
+    setNicknameSuffixCustom: (v) => set({ nicknameSuffixCustom: v }),
+    setNicknameSuffixColor: (v) => set({ nicknameSuffixColor: v }),
     setNoticeTextColor: (v) => set({ noticeTextColor: v }),
     setPaddingTopBottom: (v) => set({ paddingTopBottom: v }),
     setPaddingLeftRight: (v) => set({ paddingLeftRight: v }),
 }));
+
 export default useCssStore;
