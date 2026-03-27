@@ -1,5 +1,4 @@
 // src/utils/geminiApi.js
-import { GoogleGenAI } from "@google/genai";
 
 const FIXED_VIEWER_NICKNAME = "시청자별명";
 const FIXED_BODY_BG_COLOR = { r: 0, g: 0, b: 0, a: 0 };
@@ -256,19 +255,123 @@ const safeParseJson = (text) => {
   }
 };
 
-export const generatePresetFromGemini = async (userPrompt, fontNames) => {
-  const API_KEY = process.env.REACT_APP_GEMINI_API_KEY;
+const getRawErrorMessage = (error) => {
+  if (!error) return "";
 
-  if (!API_KEY) {
-    throw new Error("REACT_APP_GEMINI_API_KEY가 비어 있습니다.");
-  }
-
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  if (typeof error?.message === "string") return error.message;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+};
+
+const getParsedApiError = (error) => {
+  const rawMessage = getRawErrorMessage(error);
+
+  try {
+    const parsed = JSON.parse(rawMessage);
+    return parsed?.error || null;
+  } catch {
+    return null;
+  }
+};
+
+export const normalizeGeminiError = (error) => {
+  const rawMessage = getRawErrorMessage(error);
+  const apiError = getParsedApiError(error);
+
+  const status =
+    error?.status ||
+    apiError?.code ||
+    null;
+
+  const apiStatus =
+    apiError?.status ||
+    error?.name ||
+    "";
+
+  const apiMessage =
+    apiError?.message ||
+    rawMessage ||
+    "알 수 없는 오류가 발생했습니다.";
+
+  const mergedText = `${apiStatus} ${apiMessage} ${rawMessage}`.toLowerCase();
+
+  const isRateLimit =
+    status === 429 ||
+    mergedText.includes("resource_exhausted") ||
+    mergedText.includes("rate limit") ||
+    mergedText.includes("too many requests") ||
+    mergedText.includes("quota");
+
+  const isInvalidApiKey =
+    mergedText.includes("api_key_invalid") ||
+    mergedText.includes("api key not valid") ||
+    mergedText.includes("invalid api key");
+
+  const isBlocked =
+    mergedText.includes("blocked") ||
+    mergedText.includes("safety");
+
+  const isNetwork =
+    mergedText.includes("failed to fetch") ||
+    mergedText.includes("networkerror") ||
+    mergedText.includes("load failed") ||
+    mergedText.includes("network request failed");
+
+  let userMessage = "프리셋 생성에 실패했습니다. 잠시 후 다시 시도해주세요.";
+  let code = "UNKNOWN_ERROR";
+
+  if (isRateLimit) {
+    userMessage = "요청이 너무 많아요. 잠시 후 다시 시도해주세요.";
+    code = "RATE_LIMIT";
+  } else if (isInvalidApiKey) {
+    userMessage = "Gemini API 키가 올바르지 않습니다. API 키 설정을 확인해주세요.";
+    code = "INVALID_API_KEY";
+  } else if (isNetwork) {
+    userMessage = "네트워크 연결이 불안정합니다. 인터넷 연결 상태를 확인해주세요.";
+    code = "NETWORK_ERROR";
+  } else if (isBlocked) {
+    userMessage = "입력 내용이 정책상 제한되어 요청을 처리할 수 없습니다. 문구를 조금 바꿔서 다시 시도해주세요.";
+    code = "SAFETY_BLOCKED";
+  }
+
+  return {
+    name: "GeminiNormalizedError",
+    status,
+    code,
+    apiStatus,
+    apiMessage,
+    rawMessage,
+    isRateLimit,
+    isInvalidApiKey,
+    isNetwork,
+    isBlocked,
+    userMessage,
+    originalError: error,
+  };
+};
+
+export const generatePresetFromGemini = async (userPrompt, fontNames) => {
+  // 내 Cloudflare Worker 주소를 .env에서 가져옵니다.
+  const WORKER_URL = process.env.REACT_APP_WORKER_URL; 
+
+  if (!WORKER_URL) {
+    throw normalizeGeminiError(new Error("REACT_APP_WORKER_URL이 설정되지 않았습니다."));
+  }
+
+  // REST API 규격에 맞게 페이로드 작성
+  const payload = {
+    model: "gemini-2.5-flash", // Worker에서 사용할 모델
+    systemInstruction: {
+      parts: [{ text: getSystemInstruction(fontNames) }]
+    },
+    contents: [{
+      role: "user",
+      parts: [{
+              text: `
 사용자 요청:
 ${userPrompt}
 
@@ -296,14 +399,37 @@ ${userPrompt}
 - false로 선택한 불리언도 키는 반드시 포함
 - 나머지 모든 필드는 빠짐없이 생성
       `,
-      config: {
-        systemInstruction: getSystemInstruction(fontNames),
-        responseMimeType: "application/json",
-        temperature: 1.0,
-      },
+      }]
+    }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 1.0,
+    }
+  };
+
+  try {
+    // 구글 API 대신 내 Cloudflare Worker로 요청! (API 키는 필요 없음)
+    const response = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
-    const parsed = safeParseJson(response.text);
+    const data = await response.json();
+
+    // 에러 발생 시 (429, 400 등)
+    if (!response.ok) {
+      throw data; // 에러 객체를 던지면 아래 catch에서 normalizeGeminiError가 처리함
+    }
+
+    // 응답 텍스트 추출 (REST API 응답 구조)
+    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!textResponse) {
+      throw new Error("AI 응답이 올바르지 않습니다.");
+    }
+
+    const parsed = safeParseJson(textResponse);
 
     const selectedFontName = fontNames.includes(parsed.fontFamily)
       ? parsed.fontFamily
@@ -321,8 +447,8 @@ ${userPrompt}
     };
   } catch (error) {
     console.error("Gemini API Error:", error);
-    console.error("status:", error?.status);
-    console.error("message:", error?.message);
-    throw error;
+    const normalizedError = normalizeGeminiError(error);
+    console.error("Normalized Gemini Error:", normalizedError);
+    throw normalizedError;
   }
 };

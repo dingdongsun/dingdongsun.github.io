@@ -11,9 +11,13 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isRateLimitError = (error) => {
     if (error?.status === 429) return true;
+    if (error?.code === 'RATE_LIMIT') return true;
 
-    const message = String(error?.message || '');
-    return /RESOURCE_EXHAUSTED|rate limit|too many requests|429/i.test(message);
+    const message = String(
+        error?.userMessage || error?.apiMessage || error?.message || ''
+    );
+
+    return /RESOURCE_EXHAUSTED|rate limit|too many requests|429|quota/i.test(message);
 };
 
 export default function AiPresetGenerator() {
@@ -25,24 +29,44 @@ export default function AiPresetGenerator() {
     const setFontFamily = useCssStore(state => state.setFontFamily);
 
     const requestPresetWithRetry = async (userPrompt, fontNames) => {
+        let lastError = null;
+        const retryToastId = 'ai-preset-retry';
+
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
             try {
-                return await generatePresetFromGemini(userPrompt, fontNames);
-            } catch (error) {
-                const shouldRetry = isRateLimitError(error) && attempt < MAX_RETRIES;
-
-                if (!shouldRetry) {
-                    throw error;
+                if (attempt > 0) {
+                    toast.loading(`요청이 많아 다시 시도 중입니다... (${attempt + 1}/${MAX_RETRIES + 1})`, {
+                        id: retryToastId,
+                    });
                 }
 
-                const waitMs = 1500 * (2 ** attempt);
-                toast(`요청이 많아 잠시 후 다시 시도합니다.`);
+                const result = await generatePresetFromGemini(userPrompt, fontNames);
 
+                toast.dismiss(retryToastId);
+                return result;
+            // AiPresetGenerator.jsx 안의 예외 처리 부분 수정 예시
+            } catch (error) {
+                lastError = error;
+
+                // 429 에러면 재시도하지 않고 바로 반복문 탈출 (사용자에게 기다리게 함)
+                if (isRateLimitError(error)) {
+                    toast.dismiss(retryToastId);
+                    toast.warning("요청이 너무 많습니다. 약 1분 뒤에 다시 시도해주세요.");
+                    throw error; 
+                }
+
+                // 다른 네트워크 에러 등일 때만 재시도
+                const waitMs = 2000 * (attempt + 1);
+                toast.loading(
+                    `연결 지연. ${Math.ceil(waitMs / 1000)}초 후 다시 시도합니다...`,
+                    { id: retryToastId }
+                );
                 await sleep(waitMs);
             }
         }
 
-        throw new Error('프리셋 생성 재시도에 실패했습니다.');
+        toast.dismiss(retryToastId);
+        throw lastError;
     };
 
     const handleGenerate = async () => {
@@ -53,7 +77,7 @@ export default function AiPresetGenerator() {
 
         if (elapsed < COOLDOWN_MS) {
             const remainSeconds = Math.ceil((COOLDOWN_MS - elapsed) / 1000);
-            toast(`요청이 너무 빨라요. ${remainSeconds}초 후 다시 시도해주세요.`);
+            toast.warning(`요청이 너무 빨라요. ${remainSeconds}초 후 다시 시도해주세요.`);
             return;
         }
 
@@ -81,12 +105,9 @@ export default function AiPresetGenerator() {
             toast.success(`AI가 [${aiData.label}] 테마를 완성했습니다!`);
         } catch (error) {
             console.error(error);
-
-            if (isRateLimitError(error)) {
-                toast.error('요청이 너무 많아요. 잠시 후 다시 시도해주세요.');
-            } else {
-                toast.error('프리셋 생성에 실패했습니다. API 키와 네트워크를 확인해주세요.');
-            }
+            toast.error(
+                error?.userMessage || '프리셋 생성에 실패했습니다. 잠시 후 다시 시도해주세요.'
+            );
         } finally {
             setIsLoading(false);
         }
@@ -177,7 +198,7 @@ export default function AiPresetGenerator() {
                             display: 'flex',
                             alignItems: 'center',
                             flexDirection: 'row',
-                            gap: '10px'
+                            gap: '10px',
                         }}
                     >
                         <input
@@ -202,7 +223,7 @@ export default function AiPresetGenerator() {
                             onClick={handleGenerate}
                             disabled={isLoading || !prompt.trim()}
                             style={{
-                                whiteSpace: 'nowrap'
+                                whiteSpace: 'nowrap',
                             }}
                         >
                             {isLoading ? '생성 중...' : 'AI 프리셋 생성'}

@@ -194,15 +194,16 @@ export function generateCSS(state, {
   `,
     };
 
-    const isCssImport = fontUrl.includes('.css') || fontUrl.includes('family=') || fontUrl.includes('/css?');
+    // 💡 여기에 옵셔널 체이닝(?.)을 추가하여 undefined 에러를 방지합니다.
+    const isCssImport = fontUrl?.includes('.css') || fontUrl?.includes('family=') || fontUrl?.includes('/css?');
     
     // 💡 수정된 부분: forPreview가 참일 때는 폰트 로드 구문을 빈 문자열로 반환하여 깜빡임 방지
-    const fontFaceConfig = forPreview 
+    const fontFaceConfig = forPreview
         ? '' 
         : (isCssImport 
             ? `@import ${fontUrl};` 
             : `@font-face {
-  font-family: '${fontFamily.replace(/['"]/g, '')}'; /* 띄어쓰기가 있는 폰트명을 위해 따옴표 처리 */
+  font-family: '${(fontFamily || '').replace(/['"]/g, '')}'; /* 띄어쓰기가 있는 폰트명을 위해 따옴표 처리 */
   src: ${fontUrl};
   font-weight: ${fontWeight};
   font-style: normal;
