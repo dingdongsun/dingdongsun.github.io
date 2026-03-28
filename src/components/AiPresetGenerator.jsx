@@ -172,7 +172,7 @@ export default function AiPresetGenerator() {
                     <span className="label">AI 매직 프리셋 생성</span>
                     <p className="desc">원하는 분위기를 입력하면 AI가 채팅창 프리셋을 자동으로 만들어드립니다.</p>
 
-                    <div style={{ marginBottom: '16px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+                    <div style={{ marginBottom: '16px', padding: '16px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #e9ecef', marginTop: 12, }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 700, color: '#343a40' }}>Gemini API Key</span>
                             <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#339af0', textDecoration: 'none', fontWeight: 600 }}>
