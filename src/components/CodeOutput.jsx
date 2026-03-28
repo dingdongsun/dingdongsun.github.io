@@ -44,7 +44,7 @@ function CodeOutput() {
                     fontWeight: 700
                 }}
             >
-                개발자에게 커피 사주기
+                개발자에게 커피 사기
             </button>
             
             <button onClick={handleCopy}>

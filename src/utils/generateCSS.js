@@ -327,6 +327,8 @@ ${enableFadeOut
 }
 [class^=live_chatting_username_icon] {
   vertical-align: top;
+  width: auto!important;
+  height: auto!important;
 }
 [class*=badge_container] {
   display: block;
