@@ -1730,3 +1730,111 @@ button:disabled {
     border-radius: 14px;
     max-width: 520px
 }
+.preset-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+/* --- 커스텀 모달 스타일 --- */
+.custom-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    backdrop-filter: blur(2px);
+}
+
+.custom-modal-content {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    min-width: 540px;
+    max-width: 90%;
+    color: #333;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.custom-modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 12px;
+}
+
+.preset-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.preset-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.preset-list li:last-child {
+    border-bottom: none;
+}
+
+.preset-name {
+    font-weight: 500;
+}
+
+.preset-name small {
+    color: #888;
+    margin-left: 6px;
+    font-weight: normal;
+}
+
+.preset-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.preset-actions button {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: none;
+}
+
+.apply-btn {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+.apply-btn:hover { background-color: #bbdefb; }
+
+.delete-btn {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+.delete-btn:hover { background-color: #ffcdd2; }
+
+.close-btn {
+    width: 100%;
+    padding: 10px;
+    background: #f1f3f5;
+    color: #495057;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.close-btn:hover {
+    background: #e9ecef;
+}
+
+.confirm-modal h3 {
+    border-bottom: none;
+    padding-bottom: 0;
+}

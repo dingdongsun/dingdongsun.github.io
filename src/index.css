@@ -254,10 +254,15 @@ table {
     width: 40vw;
     box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
     max-height: 80vh;
+    height: stretch;
     background-image: url(./bg.jpg);
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
+}
+
+.preview-panel .preview-wrapper {
+    height: 100%;
 }
 
 .preview-panel .preview-wrapper h2 {
@@ -282,11 +287,20 @@ table {
     height: 40px;
 }
 
+.preview-box {
+    height: calc(100% - 77px);
+}
+
+.preview-box .root {
+    height: 100%;;
+}
+
 .preview-panel [class^=live_overlay_chatting] {
     max-height: calc(80vh - 4rem - 77px);
     overflow: auto;
     padding-right: 0.5rem;
     /* align-items: flex-end; */
+    justify-content: center;
 }
 
 [class^=live_overlay_item]:first-of-type {
