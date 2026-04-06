@@ -393,8 +393,15 @@ ${userPrompt}
       },
     });
 
-    // ... (이하 응답 처리 로직 기존과 동일) ...
-    const parsed = safeParseJson(response.text);
+    // 응답 처리 로직
+    const textResponse = response.text;
+
+    // 응답이 없는 경우의 에러 처리 
+    if (!textResponse) {
+      throw new Error("AI 응답이 올바르지 않습니다.");
+    }
+
+    const parsed = safeParseJson(textResponse);
 
     const selectedFontName = fontNames.includes(parsed.fontFamily)
       ? parsed.fontFamily
@@ -410,6 +417,7 @@ ${userPrompt}
       bodyBgColor: FIXED_BODY_BG_COLOR,
       viewerNickname: FIXED_VIEWER_NICKNAME,
     };
+    
   } catch (error) {
     console.error("Gemini API Error:", error);
     const normalizedError = normalizeGeminiError(error);
